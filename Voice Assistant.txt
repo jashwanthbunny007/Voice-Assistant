@@ -1,0 +1,164 @@
+import pyttsx3
+import datetime
+import pywhatkit
+import speech_recognition as sr
+import wikipedia
+import smtplib
+import webbrowser as wb
+import os
+import pyautogui
+import psutil
+import shutil
+import pyjokes
+
+
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+engine.setProperty('voice',voices[1].id)
+newVoiceRate = 150
+engine.setProperty('rate',newVoiceRate)
+
+
+
+def speak(audio):
+    engine.say(audio)
+    engine.runAndWait()
+
+def time():
+ Time = datetime.datetime.now().strftime("%I:%M:%S")
+ speak(Time)
+
+def date():
+    year = int(datetime.datetime.now().year)
+    month = int(datetime.datetime.now().month)
+    date = int(datetime.datetime.now().day)
+    speak("the current date is")
+    speak(date)
+    speak(month)
+    speak(year)
+
+def wishme():
+    speak("Welcome back sir")
+    hour = datetime.datetime.now().hour
+    if hour >= 6 and hour<=12:
+        speak("Good morning")
+    elif hour >=12 and hour <18:
+        speak("gud afternoon")
+    elif hour>=18 and hour <=24:
+        speak("gud evening")
+    else:
+        speak("gud night")
+    #speak("Megha is at your service how can i help you")
+
+def takeCommand():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening....")
+        r.pause_threshold = 1
+        audio = r.listen(source)
+    try:
+        print("Recognising...")
+        query = r.recognize_google(audio)
+        print(query)
+    except Exception as e:
+        print(e)
+        speak("Say that again please..")
+
+        return"None"
+    return query
+
+def sendmail(to, content):
+    server = smtplib.SMTP('smtp.gmail.com',587)
+    server.ehlot()
+    server.starttls()
+    server.login("jashwanthbunny007@gmail.com","BunnY@007")
+    server.sendmail("jashwanthbunny007@gmail.com",to, content)
+    server.close()
+def screenshot():
+    img = pyautogui.screenshot()
+    img.save("D:\ss.png")
+def cpu():
+    usage = str(psutil.cpu_percent())
+    speak("cpu is at"+usage)
+def disk_usage(disk):
+    du=shutil.disk_usage(disk)
+    free=du.free/du.total*100
+    return free>20
+def battery():
+    battery = psutil.sensors_battery()
+    speak("battery is at")
+    speak(battery.percent)
+def jokes():
+    speak(pyjokes.get_joke())
+
+if __name__ == "__main__":
+
+    wishme()
+
+    while True:
+        query = takeCommand().lower()
+        print(query)
+
+        if "time" in query:
+            time()
+        elif "date" in query:
+            date()
+        elif "offline" in query:
+            quit()
+        elif "who is" in query:
+            speak("searching...")
+            query = query.replace("Who is","")
+            result = wikipedia.summary(query,sentences = 2)
+            speak(result)
+        elif"send mail" in query:
+            try:
+                speak("what should i send")
+                content = takeCommand()
+                to = "swaroopravi4@gmail.com"
+                sendmail(to, content)
+                speak(content)
+            except Exception as e:
+                speak(e)
+                speak('Unable to send the mail')
+        elif "search in chrome" in query:
+            speak("what should i search")
+            chromepath = "D:\downloads\chrome.exe %s"
+            search = takeCommand().lower()
+            wb.get(chromepath).open_new_tab(search + ".com")
+        # elif "logout":
+        #     os.system("shutdown - 1")
+        # elif "shutdown":
+        #     os.system("shutdown /s /t 1")
+        # elif "restart":
+        #     os.system("shutdown /r /t 1")
+        elif "play songs" in query:
+            songs_dir = "D:\downloads\Songs"
+            songs = os.listdir(songs_dir)
+            os.startfile(os.path.join(songs_dir, songs[0]))
+        elif "remember that" in query:
+            speak("what should i remember")
+            data = takeCommand()
+            speak("you said me tor remember" + data)
+            remember = open("data.txt","w")
+            remember.write(data)
+            remember.close()
+        elif "do you know anything" in query:
+            remember = open("data.txt","r")
+            speak("you said me to remember that"+remember.read())
+        elif "screenshot" in query:
+            screenshot()
+            speak("screenshot taken")
+        elif "cpu" in query:
+            cpu()
+        elif "battery" in query:
+            battery()
+        elif "jokes" in query:
+            jokes()
+        elif "whatsapp" in query:
+            speak("to which number should i send")
+            number = input('enter the number')
+            speak("tell the message you want to send")
+            message = takeCommand()
+            pywhatkit.sendwhatmsg_instantly('+91'+number, message)
+        elif "disk usage" in query:
+            disk_usage()
